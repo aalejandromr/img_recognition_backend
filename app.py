@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request
 import os
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
@@ -6,7 +6,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = f'{ROOT_DIR}/images_to_predict'
+UPLOAD_FOLDER = f"{ROOT_DIR}/images_to_predict"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/predict', methods=['POST'])
@@ -17,3 +17,7 @@ def predict():
     # submit a empty part without filename
     filename = secure_filename(file.filename)
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+@app.route('/')
+def index():
+  return "<h1>Welcome to CodingX</h1>"
