@@ -13,7 +13,7 @@ import pathlib
 # data_dir = tf.keras.utils.get_file('training_photos', origin=dataset_url)
 
 # MAKE SOME COMMENTS
-data_dir = pathlib.Path('./training_photos')
+data_dir = pathlib.Path('./../training_photos')
 
 image_count = len(list(data_dir.glob('*/*.png')))
 print(image_count)
@@ -201,16 +201,6 @@ img = tf.keras.utils.load_img(
 )
 
 plt.imshow(img)
-img_array = tf.keras.utils.img_to_array(img)
-img_array = tf.expand_dims(img_array, 0)
-model = tf.keras.models.load_model('my_model.h5')
-predictions = model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score)], 100 * np.max(score))
-)
 
 # Add JS stuff to heroku
 # Add python backend to heroku
