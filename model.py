@@ -9,11 +9,9 @@ from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 import joblib
 import pathlib
-# dataset_url = "./training_photos"
-# data_dir = tf.keras.utils.get_file('training_photos', origin=dataset_url)
 
-# MAKE SOME COMMENTS
-data_dir = pathlib.Path('./../training_photos')
+# First we gather the full set of photos
+data_dir = pathlib.Path('./training_photos')
 
 image_count = len(list(data_dir.glob('*/*.png')))
 print(image_count)
@@ -28,6 +26,8 @@ batch_size = 32
 img_height = 180
 img_width = 180
 
+# We later split the full set of photos into 2 new sets
+# The training set which will be used to train the model
 train_ds = tf.keras.utils.image_dataset_from_directory(
   data_dir,
   validation_split=0.2,
@@ -36,6 +36,8 @@ train_ds = tf.keras.utils.image_dataset_from_directory(
   image_size=(img_height, img_width),
   batch_size=batch_size)
 
+# The validation set which is the data that the training set is validated against to
+# Notice that everything we give to the validation set **will** be used as the source of thruth
 val_ds = tf.keras.utils.image_dataset_from_directory(
   data_dir,
   validation_split=0.2,
@@ -49,6 +51,8 @@ print(class_names)
 
 AUTOTUNE = tf.data.AUTOTUNE
 
+# We want to shuffle so the training and the validation set
+# are not used to seen the same data
 train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
 val_ds = val_ds.cache().shuffle(1000).prefetch(buffer_size=AUTOTUNE)
 
@@ -67,6 +71,8 @@ for images, labels in val_ds.take(1):
     plt.title(class_names[labels[i]])
     plt.axis("off")
 
+# As always when working with inputs we want to have all with the same structure
+# in this case, we want all the pictures with the same dimentions, grey colored pixels
 normalization_layer = layers.Rescaling(1./255)
 normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
 image_batch, labels_batch = next(iter(normalized_ds))
@@ -76,6 +82,9 @@ print(np.min(first_image), np.max(first_image))
 
 num_classes = 3
 
+# This is the actual neural network using the relu activation set
+# where the relu activation "filter" will have the values of each neural's output
+# a number between 0..1
 model = Sequential([
   layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
   layers.Conv2D(16, 3, padding='same', activation='relu'),
@@ -96,12 +105,15 @@ model.compile(optimizer='adam',
 model.summary()
 
 epochs=8
+# This is where the model is actually being "trained"
+# Epochs: The number of epochs is a hyperparameter that defines the number times that the learning algorithm will work through the entire training dataset. One epoch means that each sample in the training dataset has had an opportunity to update the internal model parameters. An epoch is comprised of one or more batches.
 history = model.fit(
   train_ds,
   validation_data=val_ds,
   epochs=epochs
 )
 
+# There is a function inside the neural network that calculates, based on certain parameters, the accuracy and the data loss of the current neural network
 acc = history.history['accuracy']
 val_acc = history.history['val_accuracy']
 
@@ -124,6 +136,9 @@ plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.show()
 
+# Since we are working with a limited set of images we need to feed the model more data
+# one technique is to give it the same set of images but with different filters
+# in this case we are flipping the image horizontally at a certain degree
 data_augmentation = keras.Sequential(
   [
     layers.RandomFlip("horizontal",
@@ -192,27 +207,78 @@ plt.plot(epochs_range, val_loss, label='Validation Loss')
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.show()
-model.save('./my_model.h5', overwrite=True)
+
 # img = tf.keras.utils.load_img(
-#     './training_photos/waterslide/0bpk9di.png', target_size=(img_height, img_width)
+#     'images_to_predict/waterslide_2.png', target_size=(img_height, img_width)
 # )
+
+# plt.imshow(img)
+# img_array = tf.keras.utils.img_to_array(img)
+# img_array = tf.expand_dims(img_array, 0)
+# # model = tf.keras.models.load_model('my_model.h5')
+# predictions = model.predict(img_array)
+# score = tf.nn.softmax(predictions[0])
+
 img = tf.keras.utils.load_img(
-    './image_to_predict/waterslide_2.png', target_size=(img_height, img_width)
+    'images_to_predict/mailbox.png', target_size=(img_height, img_width)
 )
 
 plt.imshow(img)
+img_array = tf.keras.utils.img_to_array(img)
+img_array = tf.expand_dims(img_array, 0)
+# model = tf.keras.models.load_model('my_model.h5')
+predictions = model.predict(img_array)
+score = tf.nn.softmax(predictions[0])
 
+# img = tf.keras.utils.load_img(
+#     'images_to_predict/birthdaycake_2.png', target_size=(img_height, img_width)
+# )
+
+# plt.imshow(img)
+# img_array = tf.keras.utils.img_to_array(img)
+# img_array = tf.expand_dims(img_array, 0)
+# # model = tf.keras.models.load_model('my_model.h5')
+# predictions = model.predict(img_array)
+# score = tf.nn.softmax(predictions[0])
+
+print(
+    "This image most likely belongs to {} with a {:.2f} percent confidence."
+    .format(class_names[np.argmax(score)], 100 * np.max(score))
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# model.save('./my_model.h5', overwrite=True)
+# img = tf.keras.utils.load_img(
+#     './training_photos/waterslide/0bpk9di.png', target_size=(img_height, img_width)
+# )
 # Add JS stuff to heroku
 # Add python backend to heroku
 # Connect frontend to backend and the backend to use the model to make a prediction
 
 # Presentation Prep
-  # Add inspiration
-  # Regular picture or drawing picture of my zoom profile
-  # Individual goals
-  # Challenges and things to learn
   # Add mention that python is not a web framework
-  # To add my challenges
-  # Share url with chad of JS stuff
   # Demo Notes
   # Next steps
